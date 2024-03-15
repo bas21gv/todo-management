@@ -26,4 +26,9 @@ public class AuthController {
     public ResponseEntity<JwtAuthResponse> login(@RequestBody LoginDto loginDto) {
         return ResponseEntity.ok(authService.login(loginDto));
     }
+
+    @GetMapping("/users")
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(authService.getAllUsers());
+    }
 }

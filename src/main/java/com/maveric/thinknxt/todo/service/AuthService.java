@@ -14,14 +14,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
+    
     public String register(RegisterDto registerDto) {
 
         if(userRepository.existsByUsername(registerDto.getUsername())) {
@@ -47,11 +48,10 @@ public class AuthService {
         user.setUsername(registerDto.getUsername());
         user.setEmail(registerDto.getEmail());
         user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
-
-        Set<Role> roles = new HashSet<>();
-        Role role = roleRepository.findByName("ROLE_USER");
-        roles.add(role);
-        user.setRoles(roles);
+        Role role = roleRepository.findByName("ROLE_USER").orElseGet(
+                () -> roleRepository.save(new Role("ROLE_USER"))
+        );
+        user.setRoles(Collections.singleton(role));
         userRepository.save(user);
         return "User Registered Successfully!";
     }
@@ -75,5 +75,10 @@ public class AuthService {
         jwtAuthResponse.setAccessToken(token);
         jwtAuthResponse.setRole(userRole);
         return jwtAuthResponse;
+    }
+
+    
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }
